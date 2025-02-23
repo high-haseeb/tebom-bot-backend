@@ -12,13 +12,14 @@ import (
 
 // NOTE: The cookie will expire, make a system to refresh the cookie when it expires.
 // For now we are replacing the cookie whenever it expires!
-var COOKIE = "INGRESSCOOKIE=1740315502.326.3053.111819|a341718d8fdd83143d3341dcba51991c; .AspNetCore.Session=CfDJ8Hmpsi7h0nFGicsClGqI2ucqeksV8eOUCmDOGue%2Bx2yHcGSH99b5IfkdsZVYoq57Um1J5sk2qzEGj9zRw%2FbsQ5qdP6MWRoD%2Bx%2F816FnLqjKCP9qqr6EOZWoQVmlecXm3yco%2BqBQg4w7pAuPf%2BbGdd66HF6ihIqoLf7QWepJYKRlh; SessionId=2A4110F9291C8990E1163A83A493B3947DE937B5E7E6A06CB7CE851D5EB7F74F; QueryType=trafik; mainHeaderGuid="
+var COOKIE = "cookie: INGRESSCOOKIE=1740329524.299.3364.79720|a341718d8fdd83143d3341dcba51991c; .AspNetCore.Session=CfDJ8Hmpsi7h0nFGicsClGqI2ueGLifdHyAMikFRmeg22N%2F8%2FFTS27R8fnbcJyyr7o88HKlel0%2BJU78Op0zmuyDrPHeYScMInefbhCM9uiVFldkqxjAjK7e4D5M5Kp00zNvELYdSxWgo7WUGijk7tmSrjTfDGlU96V%2B2ffonJKEvRWWV; SessionId=97AB5B930D40E26C22B95809928438D5BB4EB932124110CE3E9BE7F3D0943F8A; QueryType=trafik; mainHeaderGuid="
 
 func main() {
 	const PORT = ":6969"
 	mux := http.NewServeMux()
 	mux.HandleFunc("/getTrafficInfo", getTrafficInformation)
 	mux.HandleFunc("/getOffers", getOffers)
+	mux.HandleFunc("/startOfferList", sendOfferRequest)
 
 	fmt.Printf("INFO: Listening on port %s\n", PORT)
 	if err := http.ListenAndServe(PORT, mux); err != nil {
@@ -183,6 +184,93 @@ func getOffers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set response headers and return the external API response
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body)
+}
+
+type GetOfferPayload struct {
+	BrandCodeFull                string `json:"BrandCodeFull"`
+	UsingType                    string `json:"UsingType"`
+	BuildYear                    string `json:"BuildYear"`
+	FuelType                     string `json:"FuelType"`
+	ColorCode                    string `json:"ColorCode"`
+	IsRenewalPeriodTraffic       string `json:"IsRenewalPeriodTraffic"`
+	ContinueWithoutOldPolicyInfo string `json:"ContinueWithoutOldPolicyInfo"`
+	HeaderGuid                   string `json:"HeaderGuid"`
+	VehicleTypeTraffic           string `json:"VehicleTypeTraffic"`
+	Branch                       string `json:"Branch"`
+	QueryType                    string `json:"QueryType"`
+	TestQueue                    string `json:"TestQueue"`
+}
+
+func sendOfferRequest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var requestData GetOfferPayload
+	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if requestData.HeaderGuid == "" {
+		http.Error(w, "Missing HeaderGuid", http.StatusBadRequest)
+		return
+	}
+
+	externalURL := "https://portal.acente365.com/OfferNew/YeniTrafikGuncelle"
+
+	formData := url.Values{}
+	formData.Set("input[BrandCodeFull]", requestData.BrandCodeFull)
+	formData.Set("input[UsingType]", requestData.UsingType)
+	formData.Set("input[BuildYear]", requestData.BuildYear)
+	formData.Set("input[FuelType]", requestData.FuelType)
+	formData.Set("input[ColorCode]", requestData.ColorCode)
+	formData.Set("input[IsRenewalPeriodTraffic]", requestData.IsRenewalPeriodTraffic)
+	formData.Set("input[ContinueWithoutOldPolicyInfo]", requestData.ContinueWithoutOldPolicyInfo)
+	formData.Set("input[HeaderGuid]", requestData.HeaderGuid)
+	formData.Set("input[VehicleTypeTraffic]", requestData.VehicleTypeTraffic)
+	formData.Set("input[Branch]", requestData.Branch)
+	formData.Set("input[QueryType]", requestData.QueryType)
+	formData.Set("input[TestQueue]", requestData.TestQueue)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", externalURL, strings.NewReader(formData.Encode()))
+	if err != nil {
+		http.Error(w, "Failed to create request", http.StatusInternalServerError)
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	req.Header.Set("cookie", COOKIE)
+	req.Header.Set("origin", "https://portal.acente365.com")
+	req.Header.Set("referer", "https://portal.acente365.com/offer/TrafficOffer?HeaderGuid="+requestData.HeaderGuid+"&listOffer=true")
+	req.Header.Set("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, "Failed to send request", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, "Failed to read response", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body)
 }
