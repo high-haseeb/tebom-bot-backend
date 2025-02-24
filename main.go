@@ -12,10 +12,10 @@ import (
 
 // NOTE: The cookie will expire, make a system to refresh the cookie when it expires.
 // For now we are replacing the cookie whenever it expires!
-var COOKIE = "cookie: INGRESSCOOKIE=1740329524.299.3364.79720|a341718d8fdd83143d3341dcba51991c; .AspNetCore.Session=CfDJ8Hmpsi7h0nFGicsClGqI2ueGLifdHyAMikFRmeg22N%2F8%2FFTS27R8fnbcJyyr7o88HKlel0%2BJU78Op0zmuyDrPHeYScMInefbhCM9uiVFldkqxjAjK7e4D5M5Kp00zNvELYdSxWgo7WUGijk7tmSrjTfDGlU96V%2B2ffonJKEvRWWV; SessionId=97AB5B930D40E26C22B95809928438D5BB4EB932124110CE3E9BE7F3D0943F8A; QueryType=trafik; mainHeaderGuid="
+var COOKIE = "INGRESSCOOKIE=1740383019.745.4076.439847|a341718d8fdd83143d3341dcba51991c; .AspNetCore.Session=CfDJ8Hmpsi7h0nFGicsClGqI2ud8ukvRZJH0pevfkaw%2FTJTXNXC9Mhuy374OPR5osmmCe30VEBFDFO9lhC2X7J5MfLthok1V%2FSCuX3x%2FAC0yFBCMu5pcVqlTKf8X27c2uuPTdzAJuW%2BuFoSGpnFGvnkPKsH54qKXx8VKL%2B3Oqq6Gz2p8; SessionId=47EA54E47DB5C111B6B4F85DB2A23CC0A9BC8196837DCD7D5BC28E52277D94E4; QueryType=trafik; mainHeaderGuid="
 
 func main() {
-	const PORT = ":6969"
+	const PORT = ":4040"
 	mux := http.NewServeMux()
 	mux.HandleFunc("/getTrafficInfo", getTrafficInformation)
 	mux.HandleFunc("/getOffers", getOffers)
