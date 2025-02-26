@@ -9,10 +9,9 @@ import (
 	"strconv"
 	"strings"
 )
-
 // NOTE: The cookie will expire, make a system to refresh the cookie when it expires.
 // For now we are replacing the cookie whenever it expires!
-var COOKIE = "INGRESSCOOKIE=1740383019.745.4076.439847|a341718d8fdd83143d3341dcba51991c; .AspNetCore.Session=CfDJ8Hmpsi7h0nFGicsClGqI2ud8ukvRZJH0pevfkaw%2FTJTXNXC9Mhuy374OPR5osmmCe30VEBFDFO9lhC2X7J5MfLthok1V%2FSCuX3x%2FAC0yFBCMu5pcVqlTKf8X27c2uuPTdzAJuW%2BuFoSGpnFGvnkPKsH54qKXx8VKL%2B3Oqq6Gz2p8; SessionId=47EA54E47DB5C111B6B4F85DB2A23CC0A9BC8196837DCD7D5BC28E52277D94E4; QueryType=trafik; mainHeaderGuid="
+var COOKIE = "INGRESSCOOKIE=1740608801.557.1096.240344|a341718d8fdd83143d3341dcba51991c; .AspNetCore.Session=CfDJ8Jqe8KNpVVFPg2qq9%2FOnQc6I1cnJPlnq5sX1VGAtTQUMKXe%2BzyP3jZOHEfaQF9DGr8EtzbxDYLxs6PfztzOw%2BTJoR69V2PHEp9ESXQ9HeJkQh8N1qFuumNlldVd7qjiByLhL90O313Z5uFUlqU7kcJDHXp6W4dmutgsbI7GPXcSK; QueryType=trafik; mainHeaderGuid="
 
 func main() {
 	const PORT = ":4040"
@@ -20,6 +19,7 @@ func main() {
 	mux.HandleFunc("/getTrafficInfo", getTrafficInformation)
 	mux.HandleFunc("/getOffers", getOffers)
 	mux.HandleFunc("/startOfferList", sendOfferRequest)
+	mux.HandleFunc("/getPDF", getPDF)
 
 	fmt.Printf("INFO: Listening on port %s\n", PORT)
 	if err := http.ListenAndServe(PORT, mux); err != nil {
@@ -274,3 +274,80 @@ func sendOfferRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body)
 }
+
+
+type PDFRequest struct {
+	Type        string `json:"type"`
+	SelectedItem string `json:"selectedItem"`
+	HeaderGuid  string `json:"headerGuid"`
+	QueryType   string `json:"queryType"`
+	GroupType   string `json:"groupType"`
+}
+
+func getPDF(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var requestData PDFRequest
+	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if requestData.HeaderGuid == "" {
+		http.Error(w, "Missing HeaderGuid", http.StatusBadRequest)
+		return
+	}
+
+	externalURL := "https://portal.acente365.com/Offer/DownloadAllOffersPdf"
+
+	formData := url.Values{}
+	formData.Set("type", requestData.Type)
+	formData.Set("selectedItem", requestData.SelectedItem)
+	formData.Set("headerGuid", requestData.HeaderGuid)
+	formData.Set("queryType", requestData.QueryType)
+	formData.Set("groupType", requestData.GroupType)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", externalURL, strings.NewReader(formData.Encode()))
+	if err != nil {
+		http.Error(w, "Failed to create request", http.StatusInternalServerError)
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	req.Header.Set("accept", "*/*")
+	req.Header.Set("origin", "https://portal.acente365.com")
+	req.Header.Set("referer", "https://portal.acente365.com/offer/TrafficOffer?HeaderGuid="+requestData.HeaderGuid+"&listOffer=true")
+	req.Header.Set("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+	req.Header.Set("x-requested-with", "XMLHttpRequest")
+	req.Header.Set("cookie", COOKIE)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, "Failed to send request", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, "Failed to read response", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Write(body)
+}
+
