@@ -1,0 +1,6 @@
+Screen Data Model
+Screens => components
+Components => text, field, buttons etc.
+Routing Model
+Actions => predefined logic on the client =>  navigate, data_exchange, open_url, update_data or complete
+

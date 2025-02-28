@@ -1,0 +1,104 @@
+{
+    "version": "6.3",
+    "data_api_version": "3.0",
+    "routing_model": {
+        "Home": [
+            "Form"
+        ],
+        "Form": [
+            "ThankYou"
+        ]
+    },
+    "screens": [
+        {
+            "id": "Home",
+            "terminal": false,
+            "title": "Home",
+            "data": {
+                "welcome_text": {
+                    "type": "string",
+                    "__example__": "Welcome!"
+                }
+            },
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "${data.welcome_text}"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "Description Brosike"
+                    },
+                    {
+                        "type": "Form",
+                        "name": "UserData",
+                        "children": [
+                            {
+                                "type": "TextInput",
+                                "required": true,
+                                "label": "First name",
+                                "name": "first_name"
+                            },
+                            {
+                                "type": "TextInput",
+                                "required": true,
+                                "label": "Second name",
+                                "name": "second_name"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Footer",
+                        "label": "Continue",
+                        "on-click-action": {
+                            "name": "data_exchange",
+                            "payload": {
+                                "name": "${form.first_name}"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "Form",
+            "terminal": false,
+            "title": "Information Form",
+            "data": {},
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "Footer",
+                        "label": "Continue",
+                        "on-click-action": {
+                            "name": "data_exchange",
+                            "payload": {}
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "ThankYou",
+            "terminal": true,
+            "title": "Thank You!",
+            "data": {},
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "Footer",
+                        "label": "Continue",
+                        "on-click-action": {
+                            "name": "data_exchange",
+                            "payload": {}
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,15 +1,19 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	godotenv.Load(".env");
 	PORT := os.Getenv("PORT");
+	// if err := WaSendFlow(); err != nil {
+	// 	fmt.Printf(err.Error());
+	// }
 
 	mux := http.NewServeMux();
 
@@ -17,6 +21,7 @@ func main() {
 	mux.Handle("/startOffers", Middleware(StartOffer));
 	mux.Handle("/get/offers", Middleware(GetOffers));
 	mux.Handle("/get/PDF", Middleware(GetPDF));
+	mux.HandleFunc("/webhook", WaHandleWebhooks);
 
 	log.Printf("INFO: Listening on port %s\n", PORT);
 	if err := http.ListenAndServe(PORT, mux); err != nil {

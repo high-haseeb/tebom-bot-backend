@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	whatsapp "github.com/high-haseeb/tebom/whatsapp"
 	"strings"
 )
 
@@ -252,7 +251,7 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, "Failed to created file", err.Error(), http.StatusInternalServerError);
 		return;
 	}
-    whatsapp.WaSendPDF(filePath);
+    WaSendPDF(filePath);
 
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Write(body);
