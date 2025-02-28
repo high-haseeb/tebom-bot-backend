@@ -12,6 +12,19 @@ import (
 	"path/filepath"
 )
 
+func WaSendPDF(filePath string) error {
+	mediaId, err := uploadPDFToWhatsApp(filePath)
+	if err != nil {
+		return err
+	}
+
+	err = sendPDFToWhatsApp(mediaId, os.Getenv("WHATSAPP_CLOUD_API_TEST_RECIPIENT"), filePath);
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func uploadPDFToWhatsApp(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -42,8 +55,8 @@ func uploadPDFToWhatsApp(filePath string) (string, error) {
 		return "", err
 	}
 
-	token := os.Getenv("WHATSAPP_CLOUD_API_ACCESS_TOKEN");
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token));
+	token := os.Getenv("WHATSAPP_CLOUD_API_ACCESS_TOKEN")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	client := &http.Client{}
@@ -66,7 +79,7 @@ func uploadPDFToWhatsApp(filePath string) (string, error) {
 	return mediaID, nil
 }
 
-func sendPDFToWhatsApp(mediaID, recipient string) error {
+func sendPDFToWhatsApp(mediaID, recipient, filePath string) error {
 	data := map[string]interface{}{
 		"messaging_product": "whatsapp",
 		"recipient_type":    "individual",
@@ -74,8 +87,8 @@ func sendPDFToWhatsApp(mediaID, recipient string) error {
 		"type":              "document",
 		"document": map[string]string{
 			"id":       mediaID,
-			"caption":  "Here is your requested PDF",
-			"filename": "output.pdf",
+			"caption":  filepath.Base(filePath),
+			"filename": filepath.Base(filePath),
 		},
 	}
 
@@ -89,8 +102,8 @@ func sendPDFToWhatsApp(mediaID, recipient string) error {
 		return err
 	}
 
-	token := os.Getenv("WHATSAPP_CLOUD_API_ACCESS_TOKEN");
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token));
+	token := os.Getenv("WHATSAPP_CLOUD_API_ACCESS_TOKEN")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

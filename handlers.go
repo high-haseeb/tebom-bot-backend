@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	whatsapp "github.com/high-haseeb/tebom/whatsapp"
 	"strings"
 )
 
@@ -94,6 +95,7 @@ func GetVehicleInformation(w http.ResponseWriter, r *http.Request) {
 	    RespondWithError(w, "Can not read response body", err.Error(), http.StatusInternalServerError);
 	    return;
 	}
+	defer response.Close();
 	w.Write(body);
 }
 
@@ -223,11 +225,19 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, "Something went wrong", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	var responseData GetPDFResponse;
-	if err := json.NewDecoder(response).Decode(&responseData); err != nil {
-		RespondWithError(w, "Something went wrong", err.Error(), http.StatusInternalServerError)
-		return;
+	defer response.Close();
+    body, err := io.ReadAll(response);
+	if err != nil {
+		RespondWithError(w, "Can not read response body", err.Error(), http.StatusInternalServerError);
+		return
 	}
+
+	var responseData GetPDFResponse;
+	if err := json.Unmarshal(body, &responseData); err != nil {
+		RespondWithError(w, "Something went wrong", err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	fileName := responseData.File.FileDownloadName;
 
 	filePath := "./output/" + fileName;
@@ -242,27 +252,9 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, "Failed to created file", err.Error(), http.StatusInternalServerError);
 		return;
 	}
-
-	// mediaID, err := uploadPDFToWhatsApp(filePath)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	http.Error(w, "Failed to upload to WhatsApp", http.StatusInternalServerError)
-	// 	return
-	// }
-	//
-	// err = sendPDFToWhatsApp(mediaID, "")
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	http.Error(w, "Failed to send PDF via WhatsApp", http.StatusInternalServerError)
-	// 	return
-	// }
+    whatsapp.WaSendPDF(filePath);
 
 	w.Header().Set("Content-Type", "application/pdf")
-	body, err := io.ReadAll(response);
-	if err != nil {
-	    RespondWithError(w, "Can not read response body", err.Error(), http.StatusInternalServerError);
-	    return;
-	}
 	w.Write(body);
 }
 
@@ -313,7 +305,6 @@ func SendExternalFormRequest(URL, form string) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err;
 	}
-	defer resp.Body.Close()
 
     return resp.Body, nil;
 }
