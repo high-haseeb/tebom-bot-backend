@@ -42,7 +42,8 @@ func uploadPDFToWhatsApp(filePath string) (string, error) {
 		return "", err
 	}
 
-	req.Header.Set("Authorization", "Bearer EAAHEr4Ftd4ABO1rX7lOppkFZA3SuGaAAsjwe3rikyOH9ycIi3lgzFyUZCEZCtmELmUIvyOLaHuHZADwr6ch1wXoopkW56yEHsy8cdniKYX8PFrRC4YdhRqC4NrJvmOj4aZCEPHgMmCpK6F57jxq5RSPKFmVZCVoPfjLSSeoLVJZCwFpN554OQZAsBprMLrvno3CsrZBSMgmisMq9llG4DVfjPEiLIzAH1EI1RGDHTXs7Y")
+	token := os.Getenv("WHATSAPP_CLOUD_API_ACCESS_TOKEN");
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token));
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	client := &http.Client{}
@@ -88,7 +89,8 @@ func sendPDFToWhatsApp(mediaID, recipient string) error {
 		return err
 	}
 
-	req.Header.Set("Authorization", "Bearer EAAHEr4Ftd4ABO1rX7lOppkFZA3SuGaAAsjwe3rikyOH9ycIi3lgzFyUZCEZCtmELmUIvyOLaHuHZADwr6ch1wXoopkW56yEHsy8cdniKYX8PFrRC4YdhRqC4NrJvmOj4aZCEPHgMmCpK6F57jxq5RSPKFmVZCVoPfjLSSeoLVJZCwFpN554OQZAsBprMLrvno3CsrZBSMgmisMq9llG4DVfjPEiLIzAH1EI1RGDHTXs7Y")
+	token := os.Getenv("WHATSAPP_CLOUD_API_ACCESS_TOKEN");
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token));
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
