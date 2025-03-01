@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -89,12 +90,12 @@ func GetVehicleInformation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json");
-	body, err := io.ReadAll(response);
+	body, err := io.ReadAll(response.Body);
 	if err != nil {
 	    RespondWithError(w, "Can not read response body", err.Error(), http.StatusInternalServerError);
 	    return;
 	}
-	defer response.Close();
+	defer response.Body.Close();
 	w.Write(body);
 }
 
@@ -151,7 +152,7 @@ func StartOffer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json");
-	body, err := io.ReadAll(response);
+	body, err := io.ReadAll(response.Body);
 	if err != nil {
 	    RespondWithError(w, "Can not read response body", err.Error(), http.StatusInternalServerError);
 	    return;
@@ -205,10 +206,10 @@ type GetPDFResponse struct {
 }
 
 func GetPDF(w http.ResponseWriter, r *http.Request) {
-	var request GetPDFRequest
+	var request GetPDFRequest;
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		RespondWithError(w, "INVALID REQUEST", err.Error(), http.StatusBadRequest)
-		return
+		return;
 	}
 
 	if request.HeaderGuid == "" {
@@ -219,42 +220,39 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 	URL := "https://portal.acente365.com/Offer/DownloadAllOffersPdf"
 	form := GenerateGetPDFFrom(request)
 
-	response, err := SendExternalFormRequest(URL, form)
+	response, err := SendExternalFormRequest(URL, form);
 	if err != nil {
 		RespondWithError(w, "Something went wrong", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer response.Close();
-    body, err := io.ReadAll(response);
-	if err != nil {
-		RespondWithError(w, "Can not read response body", err.Error(), http.StatusInternalServerError);
-		return
-	}
+	defer response.Body.Close();
 
 	var responseData GetPDFResponse;
-	if err := json.Unmarshal(body, &responseData); err != nil {
-		RespondWithError(w, "Something went wrong", err.Error(), http.StatusInternalServerError)
-		return
+	if err := json.NewDecoder(response.Body).Decode(&responseData); err != nil {
+		RespondWithError(w, "can not decode response form server", err.Error(), http.StatusInternalServerError);
+		return;
 	}
 
 	fileName := responseData.File.FileDownloadName;
+	fmt.Println(fileName);
 
 	filePath := "./output/" + fileName;
 	dataPDF, err := base64.StdEncoding.DecodeString(responseData.File.FileContents)
 	if err != nil {
-		RespondWithError(w, "Failed to decode pdf", err.Error(), http.StatusInternalServerError);
+		RespondWithError(w, "failed to decode pdf", err.Error(), http.StatusInternalServerError);
 		return;
 	}
 
 	err = os.WriteFile(filePath, dataPDF, 0644);
 	if err != nil {
-		RespondWithError(w, "Failed to created file", err.Error(), http.StatusInternalServerError);
+		RespondWithError(w, "failed to created file", err.Error(), http.StatusInternalServerError);
 		return;
 	}
     WaSendPDF(filePath);
 
 	w.Header().Set("Content-Type", "application/pdf")
-	w.Write(body);
+
+	json.NewEncoder(w).Encode(responseData);
 }
 
 func GenerateGetPDFFrom(request GetPDFRequest) string {
@@ -275,7 +273,7 @@ func SendExternalRequest(URL string) ([]byte, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("cookie", GetCookie());
+	req.Header.Set("Cookie", GetCookie());
 
 	resp, err := client.Do(req);
 	if err != nil {
@@ -290,7 +288,7 @@ func SendExternalRequest(URL string) ([]byte, error) {
     return body, nil;
 }
 
-func SendExternalFormRequest(URL, form string) (io.ReadCloser, error) {
+func SendExternalFormRequest(URL, form string) (*http.Response, error) {
 	client := &http.Client{};
 	req, err := http.NewRequest("POST", URL, strings.NewReader(form));
 	if err != nil {
@@ -298,14 +296,14 @@ func SendExternalFormRequest(URL, form string) (io.ReadCloser, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded");
-	req.Header.Set("cookie", GetCookie());
+	req.Header.Set("Cookie", GetCookie());
 
 	resp, err := client.Do(req);
 	if err != nil {
 		return nil, err;
 	}
 
-    return resp.Body, nil;
+    return resp, nil;
 }
 
 func Middleware(handler func(http.ResponseWriter, *http.Request)) http.Handler {
