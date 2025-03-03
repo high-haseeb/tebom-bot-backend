@@ -322,7 +322,7 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 	// 	RespondWithError(w, "Cannot read response body", err.Error(), http.StatusInternalServerError)
 	// 	return
 	// }
-
+	//
 	// fmt.Println("Raw Response Body:", string(body))
 
 	var responseData GetPDFResponse;
@@ -387,22 +387,28 @@ func SendExternalRequest(URL string) ([]byte, error) {
 }
 
 func SendExternalFormRequest(URL, form string) (*http.Response, error) {
-	client := &http.Client{};
-	req, err := http.NewRequest("POST", URL, strings.NewReader(form));
+	proxyURL, _ := url.Parse("47.251.122.81:8888")
+
+	transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+	client := &http.Client{Transport: transport}
+
+	req, err := http.NewRequest("POST", URL, strings.NewReader(form))
 	if err != nil {
-		return nil, err;
+		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded");
-	req.Header.Set("Cookie", GetCookie());
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+	req.Header.Set("Cookie", GetCookie())
 
-	resp, err := client.Do(req);
+	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err;
+		return nil, err
 	}
 
-    return resp, nil;
+	return resp, nil
 }
+
 
 func Middleware(handler func(http.ResponseWriter, *http.Request)) http.Handler {
 	return CORSMiddleware(http.HandlerFunc(handler));
