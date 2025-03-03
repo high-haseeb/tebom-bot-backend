@@ -10,6 +10,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"golang.org/x/net/proxy"
 )
 
 func GetCookie() string {
@@ -387,27 +389,32 @@ func SendExternalRequest(URL string) ([]byte, error) {
 }
 
 func SendExternalFormRequest(URL, form string) (*http.Response, error) {
-	proxyURL, _ := url.Parse("47.251.122.81:8888")
+	dialer, err := proxy.SOCKS5("tcp", "127.0.0.1:9050", nil, proxy.Direct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create SOCKS5 proxy dialer: %v", err)
+	}
 
-	transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+	// Create an HTTP transport with the Tor proxy
+	transport := &http.Transport{Dial: dialer.Dial}
 	client := &http.Client{Transport: transport}
 
+	// Create a new HTTP request
 	req, err := http.NewRequest("POST", URL, strings.NewReader(form))
 	if err != nil {
 		return nil, err
 	}
 
+	// Set headers
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-	req.Header.Set("Cookie", GetCookie())
+	req.Header.Set("Cookie", GetCookie()) // Ensure GetCookie() is defined elsewhere
 
+	// Send the request via Tor
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request failed: %v", err)
 	}
 
-	return resp, nil
-}
+	return resp, nil}
 
 
 func Middleware(handler func(http.ResponseWriter, *http.Request)) http.Handler {
