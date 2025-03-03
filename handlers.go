@@ -10,8 +10,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"golang.org/x/net/proxy"
 )
 
 func GetCookie() string {
@@ -348,7 +346,7 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, "failed to created file", err.Error(), http.StatusInternalServerError);
 		return;
 	}
-    WaSendPDF(filePath);
+    // WaSendPDF(filePath);
 
 	w.Header().Set("Content-Type", "application/pdf")
 
@@ -389,33 +387,22 @@ func SendExternalRequest(URL string) ([]byte, error) {
 }
 
 func SendExternalFormRequest(URL, form string) (*http.Response, error) {
-	dialer, err := proxy.SOCKS5("tcp", "127.0.0.1:9050", nil, proxy.Direct)
+	client := &http.Client{};
+	req, err := http.NewRequest("POST", URL, strings.NewReader(form));
 	if err != nil {
-		return nil, fmt.Errorf("failed to create SOCKS5 proxy dialer: %v", err)
+		return nil, err;
 	}
 
-	// Create an HTTP transport with the Tor proxy
-	transport := &http.Transport{Dial: dialer.Dial}
-	client := &http.Client{Transport: transport}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded");
+	req.Header.Set("Cookie", GetCookie());
 
-	// Create a new HTTP request
-	req, err := http.NewRequest("POST", URL, strings.NewReader(form))
+	resp, err := client.Do(req);
 	if err != nil {
-		return nil, err
+		return nil, err;
 	}
 
-	// Set headers
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Cookie", GetCookie()) // Ensure GetCookie() is defined elsewhere
-
-	// Send the request via Tor
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %v", err)
-	}
-
-	return resp, nil}
-
+    return resp, nil;
+}
 
 func Middleware(handler func(http.ResponseWriter, *http.Request)) http.Handler {
 	return CORSMiddleware(http.HandlerFunc(handler));
