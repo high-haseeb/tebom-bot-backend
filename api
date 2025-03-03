@@ -1,0 +1,58 @@
+curl 'https://portal.acente365.com/account/login' \
+  -H 'accept: */*' \
+  -H 'accept-language: en-US,en;q=0.9' \
+  -H 'content-type: application/x-www-form-urlencoded; charset=UTF-8' \
+  -H 'origin: https://portal.acente365.com' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://portal.acente365.com/account' \
+  -H 'sec-ch-ua: "Chromium";v="131", "Not_A Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Linux"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' \
+  -H 'x-requested-with: XMLHttpRequest' \
+  --data-raw 'loginModel%5BUsername%5D=rizacenkercivelek&loginModel%5BPassword%5D=5SdCF3WcLKuKohgrrDTXZg%3D%3D&loginModel%5BRedirectUrl%5D=&loginModel%5BMfaControl%5D=false&loginModel%5BMfaCode%5D=&loginModel%5BGuid%5D=8d16ec08-ca77-4742-8ef4-a7f207732bb2'
+{
+    "StatusCode": 2010,
+    "Success": false,
+    "Messages": [
+        "Hesabınızda MFA sistemi aktiftir. Lütfen telefonunuza gönderilen JSRHNW referans numaralı bildirime tıklayın."
+    ],
+    "IsRedirect": false,
+    "RedirectUrl": "",
+    "ExtraData": null
+}
+
+var updatedCookie = encodeURIComponent(name) + "=" + encodeURIComponent(value);
+
+curl 'https://portal.acente365.com/Account/GetAgentAndIp' \
+  -X 'POST' \
+  -H 'accept: */*' \
+  -H 'accept-language: en-US,en;q=0.9' \
+  -H 'content-length: 0' \
+  -H 'cookie: INGRESSCOOKIE=1740935055.571.3926.236621|helloWorld' \
+  -H 'origin: https://portal.acente365.com' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://portal.acente365.com/account' \
+  -H 'sec-ch-ua: "Chromium";v="131", "Not_A Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Linux"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' \
+  -H 'x-requested-with: XMLHttpRequest'
+
+{
+    "status": true,
+    "message": "İşlem Başarılı",
+    "data": {
+        "IpAdress": "213.74.145.212",
+        "BrowserName": "Other",
+        "Platform": "Other",
+        "Agent": "RestSharp/106.13.0.0",
+        "IsMobile": false
+    }
+}

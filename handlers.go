@@ -91,6 +91,7 @@ func GetVehicleInformation(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json");
 	body, err := io.ReadAll(response.Body);
+
 	if err != nil {
 	    RespondWithError(w, "Can not read response body", err.Error(), http.StatusInternalServerError);
 	    return;
@@ -165,6 +166,58 @@ type GetOffersRequest struct {
 	HeaderGuid string `json:"guid"`
 }
 
+type TrafficQueryResponse struct {
+	AdditionalPremiumDiscount     bool        `json:"AdditionalPremiumDiscount"`
+	AvailableCampaigns            []interface{} `json:"AvailableCampaigns"`
+	BranchId                      int         `json:"BranchId"`
+	CalisilanBranchGuid           string      `json:"CalisilanBranchGuid"`
+	CalisilanBranchId             int         `json:"CalisilanBranchId"`
+	CalisilanFirmGuid             string      `json:"CalisilanFirmGuid"`
+	CalisilanFirmId               int         `json:"CalisilanFirmId"`
+	CalisilanUserGuid             string      `json:"CalisilanUserGuid"`
+	CalisilanUserId               int         `json:"CalisilanUserId"`
+	Currency                      string      `json:"Currency"`
+	DetailGuid                    string      `json:"DetailGuid"`
+	Detay                         interface{} `json:"Detay"` // Can be any type, adjust as needed
+	DetayTaksitSayisi             string      `json:"DetayTaksitSayisi"`
+	ErrorMessage                  string      `json:"ErrorMessage"`
+	ExpertiseGuid                 *string     `json:"ExpertiseGuid"` // Nullable field
+	FirmId                        int         `json:"FirmId"`
+	FirstYearDetailId             int         `json:"FirstYearDetailId"`
+	GroupType                     string      `json:"GroupType"`
+	HeaderGuid                    string      `json:"HeaderGuid"`
+	Installments                  []interface{} `json:"Installments"`
+	InsuranceCompanyName          string      `json:"InsuranceCompanyName"`
+	IsAskedCenterWaiting          bool        `json:"IsAskedCenterWaiting"`
+	IsAuthorization               bool        `json:"IsAuthorization"`
+	IsFavorite                    bool        `json:"IsFavorite"`
+	IsHaveAskQuestionPermission   bool        `json:"IsHaveAskQuestionPermission"`
+	IsRepliedCenterWaiting        bool        `json:"IsRepliedCenterWaiting"`
+	IsRevisedOffer                bool        `json:"IsRevisedOffer"`
+	IsSecondYear                  bool        `json:"IsSecondYear"`
+	IsSendcenterEkopre            bool        `json:"IsSendcenterEkopre"`
+	IsSendcenterManuel            bool        `json:"IsSendcenterManuel"`
+	IsSendcenterManuelFiyatli     bool        `json:"IsSendcenterManuelFiyatli"`
+	IsSendcenterTekrarsor         bool        `json:"IsSendcenterTekrarsor"`
+	Logo                          string      `json:"Logo"`
+	OfferCode                     string      `json:"OfferCode"`
+	OfferComission                float64     `json:"OfferComission"`
+	PackageClassName              string      `json:"PackageClassName"`
+	PackageGuid                   string      `json:"PackageGuid"`
+	PolicyStart                   string      `json:"PolicyStart"`
+	Price                         float64     `json:"Price"`
+	QueryType                     string      `json:"QueryType"`
+	QueryTypeId                   int         `json:"QueryTypeId"`
+	QueryTypeName                 string      `json:"QueryTypeName"`
+	ScreenShot                    string      `json:"ScreenShot"`
+	ShowAttributeList             []interface{} `json:"ShowAttributeList"`
+	ShowBuyButton                 bool        `json:"ShowBuyButton"`
+	ShowPrice                     bool        `json:"ShowPrice"`
+	StatusCode                    interface{} `json:"StatusCode"` // Nullable field
+	Success                       bool        `json:"Success"`
+	UserId                        int         `json:"UserId"`
+}
+
 func GetOffers(w http.ResponseWriter, r *http.Request) {
 	var request GetOffersRequest;
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -184,6 +237,43 @@ func GetOffers(w http.ResponseWriter, r *http.Request) {
 		return;
 	}
 
+	// var offers []TrafficQueryResponse
+	// if err := json.Unmarshal(response, &offers); err != nil {
+	// 	RespondWithError(w, "Failed to parse offers", err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+	//
+	// // Generate WhatsApp list message
+	// sections := []map[string]interface{}{
+	// 	{
+	// 		"title": "Available Offers",
+	// 		"rows":  []map[string]string{},
+	// 	},
+	// }
+	//
+	// for _, offer := range offers {
+	// 	sections[0]["rows"] = append(sections[0]["rows"].([]map[string]string), map[string]string{
+	// 		"id":          offer.OfferCode,
+	// 		"title":       offer.InsuranceCompanyName,
+	// 		"description": fmt.Sprintf("Price: %.2f %s", offer.Price, offer.Currency),
+	// 	})
+	// }
+	//
+	// // Send the WhatsApp interactive list message
+	// go func() {
+	// 	err := WaSendListMessage(
+	// 		"+923038023397",
+	// 		"Select an Offer",         // Header
+	// 		"Choose the best offer:",  // Body
+	// 		"Tap to view details.",    // Footer
+	// 		"View Offers",            // Button text
+	// 		sections,
+	// 	)
+	// 	if err != nil {
+	// 		fmt.Println("Failed to send WhatsApp message:", err)
+	// 	}
+	// }()
+	//
 	w.Header().Set("Content-Type", "application/json");
 	w.Write(response);
 }
@@ -226,6 +316,14 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer response.Body.Close();
+
+	// body, err := io.ReadAll(response.Body)
+	// if err != nil {
+	// 	RespondWithError(w, "Cannot read response body", err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// fmt.Println("Raw Response Body:", string(body))
 
 	var responseData GetPDFResponse;
 	if err := json.NewDecoder(response.Body).Decode(&responseData); err != nil {

@@ -16,6 +16,7 @@ func main() {
 	// }
 
 	mux := http.NewServeMux();
+	// WaSendText("+923038023397", "Lütfen cep telefonunuzdaki giriş isteğini kabul edin");
 
 	mux.Handle("/get/vehicleInfo", Middleware(GetVehicleInformation));
 	mux.Handle("/startOffers", Middleware(StartOffer));

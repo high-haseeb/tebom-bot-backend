@@ -109,6 +109,30 @@ func WaSendInteractive(to string) error {
 	return nil;
 }
 
+func WaSendListMessage(to, header, body, footer string, buttonText string, sections []map[string]interface{}) error {
+	data := map[string]interface{}{
+		"messaging_product": "whatsapp",
+		"recipient_type":    "individual",
+		"to":                to,
+		"type":              "interactive",
+		"interactive": map[string]interface{}{
+			"type": "list",
+			"body": map[string]string{
+				"text": body,
+			},
+			"footer": map[string]string{
+				"text": footer,
+			},
+			"action": map[string]interface{}{
+				"button": buttonText,
+				"sections": sections,
+			},
+		},
+	}
+
+	return WaSendMessage(data)
+}
+
 func WaSendMessage(data map[string]interface{}) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
