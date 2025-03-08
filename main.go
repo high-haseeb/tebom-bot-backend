@@ -4,28 +4,42 @@ import (
 	"log"
 	"net/http"
 	"os"
+    "time"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	godotenv.Load(".env");
-	PORT := os.Getenv("PORT");
-	// if err := WaSendFlow(); err != nil {
-	// 	fmt.Printf(err.Error());
-	// }
+    godotenv.Load(".env");
+    PORT := os.Getenv("PORT");
 
-	mux := http.NewServeMux();
-	// WaSendText("+923038023397", "Lütfen cep telefonunuzdaki giriş isteğini kabul edin");
+    go HandleWebsocket();
+    mux := http.NewServeMux();
 
-	mux.Handle("/get/vehicleInfo", Middleware(GetVehicleInformation));
-	mux.Handle("/startOffers", Middleware(StartOffer));
-	mux.Handle("/get/offers", Middleware(GetOffers));
-	mux.Handle("/get/PDF", Middleware(GetPDF));
-	mux.HandleFunc("/webhook", WaHandleWebhooks);
+    if err := GetToken(); err != nil {
+        log.Println("ERROR: can not read the token", err.Error());
+    }
 
-	log.Printf("INFO: Listening on port %s\n", PORT);
-	if err := http.ListenAndServe(PORT, mux); err != nil {
-		log.Fatalf("ERROR: Failed to start HTTP server: %s\n", err.Error());
-	}
+    mux.Handle("/get/vehicleInfo", Middleware(GetVehicleInformation));
+    mux.Handle("/startOffers", Middleware(StartOffer));
+    mux.Handle("/get/offers", Middleware(GetOffers));
+    mux.Handle("/get/PDF", Middleware(GetPDF));
+    mux.HandleFunc("/webhook", WaHandleWebhooks);
+
+    go func() {
+        ticker := time.NewTicker(30 * time.Minute)
+        defer ticker.Stop()
+
+        for {
+            responseData := send_MFA_Request()
+            log.Println("INFO: sent get MFA request, server response status:", responseData)
+            <-ticker.C 
+        }
+    }()
+
+
+    log.Printf("INFO: Listening on port %s\n", PORT);
+    if err := http.ListenAndServe(PORT, mux); err != nil {
+    	log.Fatalf("ERROR: Failed to start HTTP server: %s\n", err.Error());
+    }
 }

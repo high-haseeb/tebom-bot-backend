@@ -11,11 +11,25 @@ import (
 	"strconv"
 	"strings"
 )
+func GetToken() error {
+	client := &http.Client{};
+    // strings.NewReader(form)
+    URL := "";
+	req, err := http.NewRequest("POST", URL, nil);
+	if err != nil {
+		return err;
+	}
 
-func GetCookie() string {
-	//BUG: the cookie is invalidated after some time.
-	// Make a system to check invalid cookies and send a request to refresh.
-	return os.Getenv("TEBOM_COOKIE")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded");
+	// req.Header.Set("Cookie", GetCookie());
+
+	resp, err := client.Do(req);
+	if err != nil {
+		return err;
+	}
+
+    fmt.Println(resp.Body);
+    return nil;
 }
 
 type ErrorResponse struct {
@@ -87,6 +101,7 @@ func GetVehicleInformation(w http.ResponseWriter, r *http.Request) {
 	response, err := SendExternalFormRequest("https://portal.acente365.com/OfferNew/YeniTrafikBilgi", form);
 	if err != nil {
 		RespondWithError(w, "Can not send Request", err.Error(), http.StatusInternalServerError);
+        return;
 	}
 
 	w.Header().Set("Content-Type", "application/json");
@@ -168,7 +183,7 @@ type GetOffersRequest struct {
 
 type TrafficQueryResponse struct {
 	AdditionalPremiumDiscount     bool        `json:"AdditionalPremiumDiscount"`
-	AvailableCampaigns            []interface{} `json:"AvailableCampaigns"`
+	AvailableCampaigns            []any       `json:"AvailableCampaigns"`
 	BranchId                      int         `json:"BranchId"`
 	CalisilanBranchGuid           string      `json:"CalisilanBranchGuid"`
 	CalisilanBranchId             int         `json:"CalisilanBranchId"`
@@ -178,7 +193,7 @@ type TrafficQueryResponse struct {
 	CalisilanUserId               int         `json:"CalisilanUserId"`
 	Currency                      string      `json:"Currency"`
 	DetailGuid                    string      `json:"DetailGuid"`
-	Detay                         interface{} `json:"Detay"` // Can be any type, adjust as needed
+	Detay                         any         `json:"Detay"` // Can be any type, adjust as needed
 	DetayTaksitSayisi             string      `json:"DetayTaksitSayisi"`
 	ErrorMessage                  string      `json:"ErrorMessage"`
 	ExpertiseGuid                 *string     `json:"ExpertiseGuid"` // Nullable field
@@ -186,7 +201,7 @@ type TrafficQueryResponse struct {
 	FirstYearDetailId             int         `json:"FirstYearDetailId"`
 	GroupType                     string      `json:"GroupType"`
 	HeaderGuid                    string      `json:"HeaderGuid"`
-	Installments                  []interface{} `json:"Installments"`
+	Installments                  []any       `json:"Installments"`
 	InsuranceCompanyName          string      `json:"InsuranceCompanyName"`
 	IsAskedCenterWaiting          bool        `json:"IsAskedCenterWaiting"`
 	IsAuthorization               bool        `json:"IsAuthorization"`
