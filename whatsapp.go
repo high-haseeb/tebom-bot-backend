@@ -139,7 +139,8 @@ func WaSendMessage(data map[string]interface{}) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", "https://graph.facebook.com/v18.0/505601559313159/messages", bytes.NewBuffer(jsonData))
+    632359703284286
+	req, err := http.NewRequest("POST", "https://graph.facebook.com/v22.0/632359703284286/messages", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
@@ -200,7 +201,7 @@ func WaUploadMedia(filePath string) (string, error) {
 
 	writer.Close()
 
-	req, err := http.NewRequest("POST", "https://graph.facebook.com/v22.0/505601559313159/media", body)
+	req, err := http.NewRequest("POST", "https://graph.facebook.com/v22.0/632359703284286/media", body)
 	if err != nil {
 		return "", err
 	}
